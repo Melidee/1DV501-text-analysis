@@ -5,3 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["./"]
+include = ["text_analysis"]
+
+[project.scripts]
+run-module= "text_analysis.main:main"
