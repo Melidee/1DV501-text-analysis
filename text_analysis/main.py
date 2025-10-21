@@ -11,9 +11,11 @@ def main():
     book_path = pick_book()
     with Book(book_path) as book:
         stats = Statistics()
-        for word in book:
-            stats.add(word)
-        print(f"There are {stats.most_common_words()} unique words in {book_path}")
+        for chunk in book:
+            stats.analyze_chunk(chunk)
+        print(
+            f"There are {stats.total_word_count()} total words and {stats.unique_word_count()} unique words in {book_path}"
+        )
 
 
 def pick_book() -> str:
@@ -27,26 +29,24 @@ class Book:
     def __init__(self, book_path: str) -> None:
         self.book: TextIOWrapper = open(book_path, "r")
         self.tail: str = ""
-        self.words: list[str] = []
 
-    def read_chunk(self) -> None:
+    def read_chunk(self) -> str:
         words = self.book.read(1024)
         if not words:
-            return
+            return ""
         while (ch := self.book.read(1)) and ch != whitespace:
             words += ch
-        self.words = "".join(
+        words += ch
+        return "".join(
             ch for ch in words if ch in ascii_letters + whitespace
-        ).split()
+        )
 
     def __iter__(self) -> Self:
         return self
 
     def __next__(self) -> str:
-        if not self.words:
-            self.read_chunk()
-        if self.words:
-            return self.words.pop(0)
+        if (chunk := self.read_chunk()):
+            return chunk
         else:
             raise StopIteration
 
