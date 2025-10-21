@@ -32,6 +32,12 @@ class Statistics:
     def most_common_words(self, number: int = 10) -> list[tuple[str, int]]:
         ordered = sorted(self.words.items(), key=lambda e: e[1])
         return ordered[::-1][0:number]
+        
+    def number_of_lines(self) -> int:
+        return self.other_chars['\n']
+        
+    def number_of_sentences(self) -> int:
+        return self.other_chars['.']
 
     def total_word_count(self) -> int:
         return sum(self.words.values())
