@@ -3,10 +3,13 @@ from io import TextIOWrapper
 from string import whitespace, ascii_letters
 from typing import Self
 
+from text_analysis import tui
 from text_analysis.stats import Statistics
+from text_analysis.tui import prompt_selection
 
 
 def main():
+    tui.Cursor.show()
     print("Hello from text_analysis")
     book_path = pick_book()
     with Book(book_path) as book:
@@ -20,9 +23,8 @@ def main():
 
 def pick_book() -> str:
     files = os.listdir()
-    print("\n".join(f"{i}: {name}" for (i, name) in enumerate(files)))
-    chosen = int(input("Enter number for the file: "))
-    return files[chosen]
+    i, _file = prompt_selection(files)
+    return files[i]
 
 
 class Book:
@@ -53,7 +55,7 @@ class Book:
     def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, type: type, value, traceback) -> None:
+    def __exit__(self, type: type, value, traceback) -> None:  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
         self.book.close()
 
 
