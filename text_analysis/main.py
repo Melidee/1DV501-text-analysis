@@ -9,7 +9,6 @@ from text_analysis.tui import prompt_selection
 
 
 def main():
-    tui.Cursor.show()
     print("Hello from text_analysis")
     book_path = pick_book()
     with Book(book_path) as book:
@@ -21,19 +20,21 @@ def main():
         )
 
 
-def pick_book() -> str:
-    files = os.listdir()
-    i, _file = prompt_selection(files)
-    return files[i]
+def pick_book(dir: str=".") -> str:
+    files = os.listdir(dir)
+    _, filename = prompt_selection(files)
+    return filename
 
 
 class Book:
+    CHUNK_SIZE: int = 1024
+    
     def __init__(self, book_path: str) -> None:
         self.book: TextIOWrapper = open(book_path, "r")
         self.tail: str = ""
 
     def read_chunk(self) -> str:
-        words = self.book.read(1024)
+        words = self.book.read(self.CHUNK_SIZE)
         if not words:
             return ""
         while (ch := self.book.read(1)) and ch != whitespace:

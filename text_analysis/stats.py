@@ -30,8 +30,8 @@ class Statistics:
         return len(self.words.keys())
 
     def most_common_words(self, number: int = 10) -> list[tuple[str, int]]:
-        ordered_by_occurances = sorted(self.words.items(), key=lambda e: e[1])
-        top_n_books = ordered_by_occurances[::-1][0:number]
+        ordered_by_occurances = sorted(self.words.items(), key=lambda e: e[1], reverse=True)
+        top_n_books = ordered_by_occurances[0:number]
         return top_n_books
         
     def number_of_lines(self) -> int:
