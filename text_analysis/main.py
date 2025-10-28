@@ -27,6 +27,9 @@ def pick_book(dir: str=".") -> str:
 
 
 class Book:
+    """
+    Utility class for reading a book from a file.
+    """
     CHUNK_SIZE: int = 1024
     
     def __init__(self, book_path: str) -> None:

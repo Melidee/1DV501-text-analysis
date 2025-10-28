@@ -1,3 +1,6 @@
+# Project Gutenberg books
+*.txt.utf-8
+
 # Python-generated files
 __pycache__/
 *.py[oc]

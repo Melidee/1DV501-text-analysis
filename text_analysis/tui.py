@@ -41,20 +41,24 @@ def prompt_selection(options: list[str], cursor: str = "➤ ") -> tuple[int, str
     return hovering, options[hovering]
 
 
+def ansi_print(code: str) -> None:
+    print(f"{ANSI_ESC}{code}", end="")
+
+
 def move_up(lines: int = 1) -> None:
-    print(f"{ANSI_ESC}[{lines}A", end="")
+    ansi_print(f"[{lines}A")
 
 
 def move_down(lines: int = 1):
-    print(f"{ANSI_ESC}[{lines}B", end="")
+    ansi_print(f"[{lines}B")
 
 
 def move_left(cols: int = 1):
-    print(f"{ANSI_ESC}[{cols}D", end="")
+    ansi_print(f"[{cols}D")
 
 
 def move_right(cols: int = 1):
-    print(f"{ANSI_ESC}[{cols}C", end="")
+    ansi_print(f"[{cols}C")
 
 
 def line_start():
@@ -62,19 +66,19 @@ def line_start():
 
 
 def clear_line():
-    print(f"{ANSI_ESC}[2K", end="")
+    ansi_print("[2k")
 
 
 def hide_cursor():
-    print(f"{ANSI_ESC}[?25l", end="")
+    ansi_print("[?25l")
 
 
 def show_cursor():
-    print(f"{ANSI_ESC}[?25h", end="")
+    ansi_print("[?25h")
 
 
 def get_position():
-    print(f"{ANSI_ESC}[6n", end="")
+    ansi_print("[6n")
 
 
 class HideCursor:
