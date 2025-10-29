@@ -11,14 +11,12 @@ def prompt_selection(options: list[str], cursor: str = "➤ ") -> tuple[int, str
         print(f"\r{cursor}\r", end="")
         move_up(line)
 
+    pad = " " * len(cursor)
     with HideCursor():
-        options = [""] + options
-        pad = " " * len(cursor)
-        print()
         for option in options:
             print(f"{pad}{option}")
-        move_up(len(options))
-        hovering: int = 0
+        move_up(len(options) + 1)
+        hovering = 1
         while True:
             print_cursor(hovering, cursor)
             match readkey():
@@ -28,17 +26,14 @@ def prompt_selection(options: list[str], cursor: str = "➤ ") -> tuple[int, str
                 case key.DOWN:
                     print_cursor(hovering, pad)
                     hovering = (
-                        hovering if hovering == len(options) - 1 else hovering + 1
+                        hovering if hovering == len(options) else hovering + 1
                     )
                 case key.SPACE | key.ENTER:
                     break
                 case _:
                     continue
-    for _ in range(len(options) + 1):
-        clear_line()
-        move_down()
-    move_up(len(options) + 1)
-    return hovering, options[hovering]
+    clear_lines(len(options))
+    return hovering, options[hovering - 1]
 
 
 def ansi_print(code: str) -> None:
@@ -67,6 +62,13 @@ def line_start():
 
 def clear_line():
     ansi_print("[2k")
+
+
+def clear_lines(n: int):
+    for _ in range(n + 1):
+        clear_line()
+        move_down()
+    move_up(n + 1)
 
 
 def hide_cursor():
