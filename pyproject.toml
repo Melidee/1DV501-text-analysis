@@ -1,10 +1,12 @@
 [project]
-name = "text-analysis"
+name = "1DV501-text-analysis"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "readchar>=4.2.1",
+]
 
 [tool.setuptools.packages.find]
 where = ["./"]
