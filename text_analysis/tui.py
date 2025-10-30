@@ -26,7 +26,7 @@ def prompt_selection(options: list[str], cursor: str = "➤ ") -> tuple[int, str
             if key_pressed == key.DOWN:
                 print_cursor(hovering, pad)
                 hovering = hovering if hovering == len(options) else hovering + 1
-            if key_pressed == key.SPACE or key == key.ENTER:
+            if key_pressed in (key.ENTER, key.SPACE):
                 break
     clear_lines(len(options))
     return hovering - 1, options[hovering - 1]

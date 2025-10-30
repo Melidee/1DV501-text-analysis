@@ -17,7 +17,11 @@ class GutenbergHeader:
     def read_file(self, file_path: str) -> tuple[str, str, str, str, str]:
         with open(file_path, "r") as f:
             lines = f.readlines(1024)
-        title = lines[11][7:]
+        title = lines[
+            11
+        ][
+            7:
+        ]  # hardcoded values for where certain metadata is, i.e author is always on line 11
         author = lines[13][9:]
         release_date = lines[15][14:]
         language = lines[18][10:]
@@ -48,7 +52,7 @@ class Book:
             return None
 
     def size(self) -> str:
-        """Size of the book file formatted to be pretty, such as 5.1MB or 3KB"""
+        """Size of the book file formatted to be pretty, such as 5.1MB or 3.0KB"""
         file_size = self.file_size
         for unit in ["B", "KB", "MB", "GB"]:
             if file_size < 1024:
@@ -59,9 +63,9 @@ class Book:
     def __iter__(self) -> Self:
         return self
 
-    def __next__(self) -> str:
+    def __next__(self) -> list[str]:
         if lines := self.book.readlines(self.CHUNK_SIZE):
-            return "\n".join(lines) + "\n"  # preserve newline count
+            return lines
         else:
             raise StopIteration
 

@@ -15,7 +15,7 @@ def main():
         for chunk in book:
             stats.analyze_chunk(chunk)
     print(stats.basic_stats())
-    print(json.dumps(stats))
+    print(json.dumps(stats.report()))
 
 
 def pick_book(dir: str = ".") -> str:
