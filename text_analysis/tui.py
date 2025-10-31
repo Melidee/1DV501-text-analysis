@@ -12,11 +12,12 @@ def prompt_selection(options: list[str], cursor: str = "➤ ") -> tuple[int, str
         move_up(line)
 
     pad = " " * len(cursor)
+    for option in options:
+        print(f"{pad}{option}")
+    move_up(len(options) + 1)
+    hovering = 1
+
     with HideCursor():
-        for option in options:
-            print(f"{pad}{option}")
-        move_up(len(options) + 1)
-        hovering = 1
         while True:
             print_cursor(hovering, cursor)
             key_pressed = readkey()

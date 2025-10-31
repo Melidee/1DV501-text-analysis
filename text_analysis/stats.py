@@ -1,5 +1,5 @@
 import json
-from string import ascii_letters, whitespace
+from string import ascii_letters
 from typing import Any
 
 
@@ -19,6 +19,7 @@ class Statistics(json.JSONEncoder):
             ".": 0,
         }  # initialize characters that are literally referenced to avoid exceptions
         self.last_char: str = ""
+        self.last_line: str = ""
         self.sentence_buf: str = ""
         self.sentences: dict[int, int] = {}
         self.paragraphs: int = 0
@@ -30,7 +31,14 @@ class Statistics(json.JSONEncoder):
             self.analyze_line(line)
 
     def analyze_line(self, line: str) -> None:
-        words_in_line = 0
+        words_in_line = len(line.split())
+        current_line_len_count = get_or_default(self.lines, words_in_line, 0)
+        self.lines[words_in_line] = current_line_len_count + 1
+
+        line_terminates_paragraph = line.strip() == "" and self.last_line.strip() != ""
+        if line_terminates_paragraph:
+            self.paragraphs += 1
+
         word: str = ""
         for ch in line:
             if ch in ascii_letters + "'":
@@ -41,8 +49,7 @@ class Statistics(json.JSONEncoder):
                     self.add_word(word)
                     word = ""
             self.add_char(ch)
-        current_line_len_count = get_or_default(self.lines, words_in_line, 0)
-        self.lines[words_in_line] = current_line_len_count + 1
+        self.last_line = line
 
     def add_word(self, word: str) -> None:
         """
@@ -62,10 +69,6 @@ class Statistics(json.JSONEncoder):
             self.sentence_buf = ""
         else:
             self.sentence_buf += char
-
-        char_terminates_paragraph = char == "\n" and self.last_char != char
-        if char_terminates_paragraph:
-            self.paragraphs += 1
 
         current_char_count = get_or_default(self.chars, char, 0)
         self.chars[char] = current_char_count + 1
@@ -100,11 +103,17 @@ class Statistics(json.JSONEncoder):
         else:
             return sum(self.chars.values())
 
+    def char_kind_count(self, kind: str) -> int:
+        total = 0
+        for letter in kind:
+            total += get_or_default(self.chars, letter, 0)
+        return total
+
     def average_words_per_line(self) -> float:
         total = 0
         for line_len, count in self.lines.items():
             total += line_len * count
-        avg = total / self.line_count()
+        avg = total / sum(self.lines.values())
         return round(avg, 2)
 
     def average_word_length(self) -> float:
@@ -125,6 +134,16 @@ class Statistics(json.JSONEncoder):
         """The total number of words found within the text."""
         return sum(self.words.values())
 
+    def shortest_word(self) -> str:
+        return min(sorted(self.words.keys()), key=lambda w: len(w))
+
+    def longest_word(self) -> str:
+        return max(self.words.keys(), key=lambda w: len(w))
+
+    def words_only_once(self) -> int:
+        words_once = [word for word, count in self.words.items() if count == 1]
+        return len(words_once)
+
     def basic_stats(self) -> str:
         return f"""
 Lines: {self.line_count()}
@@ -137,6 +156,21 @@ Characters without whitespace: {self.character_count(exclude_whitespace=True)}
 Average words per line: {self.average_words_per_line()}
 Average word length: {self.average_word_length()}
 Average words per sentence: {self.average_words_per_sentence()}"""
+
+    def word_analysis(self) -> str:
+        text = "Top 10 most common words:\n"
+        for i, (word, count) in enumerate(self.most_common_words()):
+            word_percentage = count / self.total_word_count() * 100
+            text += f"  {i + 1:>2}. {word:<20} {count:>6} times ({word_percentage:>4.1f}%)\n"
+        shortest_word = self.shortest_word()
+        longest_word = self.longest_word()
+        text += "\nWord length statistics:\n"
+        text += f"  Shortest word: {shortest_word} ({len(shortest_word)} characters)\n"
+        text += f"  Longest word: {longest_word} ({len(longest_word)} characters)\n"
+        text += f"  Words appearing only once: {self.words_only_once()}\n"
+        return text
+
+    def sentence_analysis(self) -> str: ...
 
     def report(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
         return {
@@ -153,18 +187,20 @@ Average words per sentence: {self.average_words_per_sentence()}"""
                 "average_words_per_line": self.average_words_per_line(),
                 "average_word_length": self.average_word_length(),
             },
+            "word_analysis": {
+                "most_common": [{""}],
+                "word_length_stats": {
+                    "shortest": self.shortest_word(),
+                    "longest": self.longest_word(),
+                    "average_length": self.average_word_length(),
+                    "words_only_once": self.words_only_once(),
+                },
+            },
         }
 
 
-def filter_alpha(s: str) -> str:
-    filtered = ""
-    for c in s:
-        if c in ascii_letters or whitespace:
-            filtered += c
-    return filtered
-
-
 def get_or_default[K, V](d: dict[K, V], key: K, default: V) -> V:
+    """Attempts to retrieve value of `key` from `d`, returning `default` if it does not exist"""
     try:
         return d[key]
     except KeyError:

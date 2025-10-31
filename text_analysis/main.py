@@ -2,6 +2,7 @@ import json
 import os
 from os.path import isdir, isfile
 
+import text_analysis.plots as plots
 from text_analysis.book import Book
 from text_analysis.stats import Statistics
 from text_analysis.tui import prompt_selection
@@ -15,7 +16,8 @@ def main():
         for chunk in book:
             stats.analyze_chunk(chunk)
     print(stats.basic_stats())
-    print(json.dumps(stats.report()))
+    print(stats.word_analysis())
+    plots.basic_stats(stats)
 
 
 def pick_book(dir: str = ".") -> str:
