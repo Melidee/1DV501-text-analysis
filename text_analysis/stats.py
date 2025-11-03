@@ -1,16 +1,14 @@
-import json
-from string import ascii_letters
+from string import ascii_letters, whitespace
 from typing import Any
 
 
-class Statistics(json.JSONEncoder):
+class Statistics:
     """
     Aggregates and processes statistics for a given text.
     Data is added and processed in chunks.
     """
 
     def __init__(self) -> None:
-        super().__init__()
         self.words: dict[str, int] = dict()
         self.chars: dict[str, int] = {
             " ": 0,
@@ -98,7 +96,7 @@ class Statistics(json.JSONEncoder):
     def character_count(self, exclude_whitespace: bool = False) -> int:
         """Number of total characters in the book."""
         if exclude_whitespace:
-            whitespace_count = self.chars[" "] + self.chars["\t"] + self.chars["\n"]
+            whitespace_count = self.char_kind_count(whitespace)
             return sum(self.chars.values()) - whitespace_count
         else:
             return sum(self.chars.values())
@@ -143,6 +141,12 @@ class Statistics(json.JSONEncoder):
     def words_only_once(self) -> int:
         words_once = [word for word, count in self.words.items() if count == 1]
         return len(words_once)
+
+    def word_lengths(self) -> list[tuple[int, int]]:
+        return [(len(word), count) for word, count in self.words.items()]
+
+    def sentence_lengths(self) -> list[tuple[int, int]]:
+        return sorted(self.sentences.items(), key=lambda e: e[0])
 
     def basic_stats(self) -> str:
         return f"""

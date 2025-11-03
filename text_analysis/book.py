@@ -1,5 +1,3 @@
-""" """
-
 from io import TextIOWrapper
 import os
 from typing import Self
@@ -17,11 +15,8 @@ class GutenbergHeader:
     def read_file(self, file_path: str) -> tuple[str, str, str, str, str]:
         with open(file_path, "r") as f:
             lines = f.readlines(1024)
-        title = lines[
-            11
-        ][
-            7:
-        ]  # hardcoded values for where certain metadata is, i.e author is always on line 11
+        # hardcoded values for where certain metadata is, i.e title is always on line 11
+        title = lines[11][7:]
         author = lines[13][9:]
         release_date = lines[15][14:]
         language = lines[18][10:]

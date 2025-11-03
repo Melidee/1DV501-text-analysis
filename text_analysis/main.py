@@ -1,4 +1,3 @@
-import json
 import os
 from os.path import isdir, isfile
 
@@ -17,7 +16,9 @@ def main():
             stats.analyze_chunk(chunk)
     print(stats.basic_stats())
     print(stats.word_analysis())
-    plots.basic_stats(stats)
+    # plots.basic_stats(stats)
+    # plots.word_analysis(stats)
+    plots.sentence_analysis(stats)
 
 
 def pick_book(dir: str = ".") -> str:

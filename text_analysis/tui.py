@@ -3,6 +3,7 @@ from typing import Self
 
 # ANSI escape code
 ANSI_ESC = "\033"
+KEY_UP = "\u0000H"
 
 
 def prompt_selection(options: list[str], cursor: str = "➤ ") -> tuple[int, str]:
