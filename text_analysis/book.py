@@ -4,17 +4,21 @@ from typing import Self
 
 
 class GutenbergHeader:
-    def __init__(self, file_path: str) -> None:
-        title, author, release_date, language, credits = self.read_file(file_path)
+    def __init__(self, file: TextIOWrapper) -> None:
+        title, author, release_date, language, credits = self.read_file(file)
         self.title: str = title
         self.author: str = author
         self.release_date: str = release_date
         self.language: str = language
         self.credits: str = credits
 
-    def read_file(self, file_path: str) -> tuple[str, str, str, str, str]:
-        with open(file_path, "r") as f:
-            lines = f.readlines(1024)
+    def read_file(self, file: TextIOWrapper) -> tuple[str, str, str, str, str]:
+        lines: list[str] = []
+        while (line := file.readline())[
+            0:40
+        ] != "*** START OF THE PROJECT GUTENBERG EBOOK":
+            lines.append(line)
+
         # hardcoded values for where certain metadata is, i.e title is always on line 11
         title = lines[11][7:]
         author = lines[13][9:]
@@ -35,6 +39,7 @@ class Book:
         self.book_path: str = book_path
         self.book: TextIOWrapper = open(book_path, "r")
         self.file_size: int = os.path.getsize(book_path)
+        self.gutenburg: GutenbergHeader | None = self.gutenberg_header()
 
     def is_gutenburg(self) -> bool:
         with open(self.book_path, "r") as f:
@@ -42,7 +47,7 @@ class Book:
 
     def gutenberg_header(self) -> GutenbergHeader | None:
         if self.is_gutenburg():
-            return GutenbergHeader(self.book_path)
+            return GutenbergHeader(self.book)
         else:
             return None
 

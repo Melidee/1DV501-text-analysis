@@ -2,6 +2,7 @@ import os
 from os.path import isdir, isfile
 
 import text_analysis.plots as plots
+from text_analysis import analysis
 from text_analysis.book import Book
 from text_analysis.stats import Statistics
 from text_analysis.tui import prompt_selection
@@ -14,11 +15,12 @@ def main():
         stats = Statistics()
         for chunk in book:
             stats.analyze_chunk(chunk)
-    print(stats.basic_stats())
-    print(stats.word_analysis())
-    # plots.basic_stats(stats)
-    # plots.word_analysis(stats)
-    plots.sentence_analysis(stats)
+    print(analysis.basic(stats))
+    print(analysis.word_analysis(stats))
+    print(analysis.sentence_analysis(stats))
+    #plots.basic_stats(stats)
+    #plots.word_analysis(stats)
+    #plots.sentence_analysis(stats)
 
 
 def pick_book(dir: str = ".") -> str:

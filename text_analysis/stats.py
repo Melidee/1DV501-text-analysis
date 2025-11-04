@@ -1,5 +1,5 @@
+import random
 from string import ascii_letters, whitespace
-from typing import Any
 
 
 class Statistics:
@@ -20,6 +20,8 @@ class Statistics:
         self.last_line: str = ""
         self.sentence_buf: str = ""
         self.sentences: dict[int, int] = {}
+        self._sentence_shortest: str = "a " * 50  # very long sentence
+        self._sentence_longest: str = ""
         self.paragraphs: int = 0
         self.lines: dict[int, int] = {}
 
@@ -35,6 +37,8 @@ class Statistics:
 
         line_terminates_paragraph = line.strip() == "" and self.last_line.strip() != ""
         if line_terminates_paragraph:
+            # end sentence on paragraph end
+            self.add_sentence()
             self.paragraphs += 1
 
         word: str = ""
@@ -61,15 +65,29 @@ class Statistics:
     def add_char(self, char: str) -> None:
         char_terminates_sentence = char == "." and self.last_char != char
         if char_terminates_sentence:
-            sentence_len = len(self.sentence_buf.split())
-            current_line_count = get_or_default(self.sentences, sentence_len, 0)
-            self.sentences[sentence_len] = current_line_count + 1
-            self.sentence_buf = ""
+            self.add_sentence()
         else:
             self.sentence_buf += char
 
         current_char_count = get_or_default(self.chars, char, 0)
         self.chars[char] = current_char_count + 1
+
+    def add_sentence(self) -> None:
+        # remove newlines so we can pretty print
+        sentence = self.sentence_buf.replace("\n", " ")
+        self.sentence_buf = ""
+        word_count = len(sentence.split())
+        if word_count == 0 or word_count == 1:
+            return
+        longest_word_count = len(self._sentence_longest.split())
+        shortest_word_count = len(self._sentence_shortest.split())
+        if word_count > longest_word_count:
+            self._sentence_longest = sentence
+        # random chance makes it more likely we get an interesting shortest sentence
+        if word_count < shortest_word_count and random.randint(0, 10) == 0:
+            self._sentence_shortest = sentence
+        current_sentence_count = get_or_default(self.sentences, word_count, 0)
+        self.sentences[word_count] = current_sentence_count + 1
 
     def unique_word_count(self) -> int:
         """Returns the number of unique words found within the text."""
@@ -133,6 +151,7 @@ class Statistics:
         return sum(self.words.values())
 
     def shortest_word(self) -> str:
+        # sorted so 'a' is prioritized and it's unlikely to be an artifact
         return min(sorted(self.words.keys()), key=lambda w: len(w))
 
     def longest_word(self) -> str:
@@ -145,62 +164,14 @@ class Statistics:
     def word_lengths(self) -> list[tuple[int, int]]:
         return [(len(word), count) for word, count in self.words.items()]
 
-    def sentence_lengths(self) -> list[tuple[int, int]]:
-        return sorted(self.sentences.items(), key=lambda e: e[0])
+    def most_common_sentence_lengths(self, n: int = 5) -> list[tuple[int, int]]:
+        return sorted(self.sentences.items(), key=lambda e: e[1], reverse=True)[0:n]
 
-    def basic_stats(self) -> str:
-        return f"""
-Lines: {self.line_count()}
-Paragraphs: {self.paragraph_count()}
-Sentences: {self.sentence_count()}
-Words: {self.total_word_count()}
-Unique Words: {self.unique_word_count()}
-Characters: {self.character_count()}
-Characters without whitespace: {self.character_count(exclude_whitespace=True)}
-Average words per line: {self.average_words_per_line()}
-Average word length: {self.average_word_length()}
-Average words per sentence: {self.average_words_per_sentence()}"""
+    def longest_sentence(self) -> tuple[str, int]:
+        return self._sentence_longest, len(self._sentence_longest.split())
 
-    def word_analysis(self) -> str:
-        text = "Top 10 most common words:\n"
-        for i, (word, count) in enumerate(self.most_common_words()):
-            word_percentage = count / self.total_word_count() * 100
-            text += f"  {i + 1:>2}. {word:<20} {count:>6} times ({word_percentage:>4.1f}%)\n"
-        shortest_word = self.shortest_word()
-        longest_word = self.longest_word()
-        text += "\nWord length statistics:\n"
-        text += f"  Shortest word: {shortest_word} ({len(shortest_word)} characters)\n"
-        text += f"  Longest word: {longest_word} ({len(longest_word)} characters)\n"
-        text += f"  Words appearing only once: {self.words_only_once()}\n"
-        return text
-
-    def sentence_analysis(self) -> str: ...
-
-    def report(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
-        return {
-            "basic_statistics": {
-                "lines": self.line_count(),
-                "paragraphs": self.paragraph_count(),
-                "sentences": self.sentence_count(),
-                "words": self.total_word_count(),
-                "unique_words": self.unique_word_count(),
-                "characters": self.character_count(),
-                "characters_without_whitespace": self.character_count(
-                    exclude_whitespace=True
-                ),
-                "average_words_per_line": self.average_words_per_line(),
-                "average_word_length": self.average_word_length(),
-            },
-            "word_analysis": {
-                "most_common": [{""}],
-                "word_length_stats": {
-                    "shortest": self.shortest_word(),
-                    "longest": self.longest_word(),
-                    "average_length": self.average_word_length(),
-                    "words_only_once": self.words_only_once(),
-                },
-            },
-        }
+    def shortest_sentence(self) -> tuple[str, int]:
+        return self._sentence_shortest, len(self._sentence_shortest.split())
 
 
 def get_or_default[K, V](d: dict[K, V], key: K, default: V) -> V:
