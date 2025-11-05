@@ -3,6 +3,13 @@ from tracemalloc import Statistic, StatisticDiff
 from text_analysis.stats import Statistics
 import matplotlib.pyplot as plt
 
+def show_plot(analysis_kind: str, stats: Statistics) -> None:
+    if analysis_kind == 'basic':
+        basic_stats(stats)
+    elif analysis_kind == 'word':
+        word_analysis(stats)
+    elif analysis_kind == 'sentence':
+        sentence_analysis(stats)
 
 def basic_stats(stats: Statistics) -> None:
     fig, (ax1, ax2) = plt.subplots(1, 2)

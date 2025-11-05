@@ -1,11 +1,11 @@
-import os
-from os.path import isdir, isfile
+import sys
+from tracemalloc import Statistic
 
 import text_analysis.plots as plots
 from text_analysis import analysis
 from text_analysis.book import Book
 from text_analysis.stats import Statistics
-from text_analysis.tui import prompt_selection
+from text_analysis.tui import pick_book, prompt_selection
 
 
 def main():
@@ -15,37 +15,38 @@ def main():
         stats = Statistics()
         for chunk in book:
             stats.analyze_chunk(chunk)
-    print(analysis.basic(stats))
-    print(analysis.word_analysis(stats))
-    print(analysis.sentence_analysis(stats))
-    #plots.basic_stats(stats)
-    #plots.word_analysis(stats)
-    #plots.sentence_analysis(stats)
+    while True:
+        analysis_kind = prompt_selection(
+            ["basic", "word", "sentence", "character", "report", "exit"]
+        )[1]
+        if analysis_kind == "basic":
+            print(analysis.basic(stats))
+        elif analysis_kind == "word":
+            print(analysis.word_analysis(stats))
+        elif analysis_kind == "sentence":
+            print(analysis.sentence_analysis(stats))
+        elif analysis_kind == "character":
+            ...
+        elif analysis_kind == "report":
+            export_report(stats)
+        elif analysis_kind == "exit":
+            sys.exit(0)
+
+        next_step = prompt_selection(["new_analysis", "plot", "exit"])[1]
+        if next_step == "new_book":
+            main()
+        elif next_step == "new_analysis":
+            continue
+        elif next_step == "plot":
+            plots.show_plot(analysis_kind, stats)
+        elif next_step == "exit":
+            sys.exit(0)
 
 
-def pick_book(dir: str = ".") -> str:
-    file_names = os.listdir(dir)
-    file_paths = [os.path.join(dir, filename) for filename in file_names]
-    file_pairs = list(zip(file_names, file_paths))
-    dirs = [
-        (name + "/", path)
-        for name, path in file_pairs
-        if isdir(path) and name[0] != "."
-    ]
-    gutenbergs = [
-        (name, path)
-        for name, path in file_pairs
-        if isfile(path) and Book(path).is_gutenburg()
-    ]  # strip hidden files
-    accessible = dirs + gutenbergs
-    shown = [name for name, _ in accessible]
-    i, filename = prompt_selection(shown)
-    with open("debug.txt", "w") as d:
-        _ = d.write(f"{accessible}\n{i}")
-    if isdir(accessible[i][1]):
-        return pick_book(os.path.join(dir + accessible[i][1]))
-    return filename
-
+def export_report(stats: Statistics) -> None:
+    report = analysis.report(stats)
+    with open("report.txt", "w") as f:
+        _ = f.write(report)
 
 if __name__ == "__main__":
     main()
