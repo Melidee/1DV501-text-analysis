@@ -1,4 +1,5 @@
 import json
+from string import ascii_letters, digits, punctuation, whitespace
 from text_analysis.stats import Statistics
 
 
@@ -45,6 +46,25 @@ Longest sentence: '{longest}' ({longest_len} words)
 Sentence length distribution (top 5):\n"""
     for length, count in stats.most_common_sentence_lengths():
         analysis += f"  {length} words: {count} sentences\n"
+    return analysis
+
+
+def character_analysis(stats: Statistics) -> str:
+    letter_count = stats.char_kind_count(ascii_letters)
+    digit_count = stats.char_kind_count(digits)
+    whitespace_count = stats.char_kind_count(whitespace)
+    punctuation_count = stats.char_kind_count(punctuation)
+    char_count = stats.character_count()
+    analysis = f"""Character type distribution:
+  Letters: {letter_count} ({letter_count / char_count * 100:.1f}%)
+  Digits: {digit_count} ({digit_count / char_count * 100:.1f}%)
+  Spaces: {whitespace_count} ({whitespace_count / char_count * 100:.1f}%)
+  Punctuation: {punctuation_count} ({punctuation_count / char_count * 100:.1f}%)
+
+Most common letters:\n"""
+    for i, (char, count) in enumerate(stats.most_common_letters()):
+        percentage = count / letter_count * 100
+        analysis += f"  {i}. '{char}' - {count} times ({percentage:.1f}%)\n"
     return analysis
 
 

@@ -1,5 +1,4 @@
 import sys
-from tracemalloc import Statistic
 
 import text_analysis.plots as plots
 from text_analysis import analysis
@@ -26,7 +25,7 @@ def main():
         elif analysis_kind == "sentence":
             print(analysis.sentence_analysis(stats))
         elif analysis_kind == "character":
-            ...
+            print(analysis.character_analysis(stats))
         elif analysis_kind == "report":
             export_report(stats)
         elif analysis_kind == "exit":

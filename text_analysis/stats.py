@@ -76,6 +76,7 @@ class Statistics:
         # remove newlines so we can pretty print
         sentence = self.sentence_buf.replace("\n", " ")
         self.sentence_buf = ""
+
         word_count = len(sentence.split())
         if word_count == 0 or word_count == 1:
             return
@@ -86,6 +87,7 @@ class Statistics:
         # random chance makes it more likely we get an interesting shortest sentence
         if word_count < shortest_word_count and random.randint(0, 10) == 0:
             self._sentence_shortest = sentence
+
         current_sentence_count = get_or_default(self.sentences, word_count, 0)
         self.sentences[word_count] = current_sentence_count + 1
 
@@ -100,6 +102,15 @@ class Statistics:
         )
         top_n_books = ordered_by_occurances[0:n]
         return top_n_books
+
+    def most_common_letters(self, n: int = 10) -> list[tuple[str, int]]:
+        ordered_by_occurances = sorted(
+            self.chars.items(), key=lambda e: e[1], reverse=True
+        )
+        letters = [
+            (ch, count) for ch, count in ordered_by_occurances if ch in ascii_letters
+        ]
+        return letters[0:n]
 
     def line_count(self) -> int:
         return self.chars["\n"]
