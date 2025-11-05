@@ -5,7 +5,7 @@ import text_analysis.plots as plots
 from text_analysis import analysis
 from text_analysis.book import Book
 from text_analysis.stats import Statistics
-from text_analysis.tui import pick_book, prompt_selection
+from text_analysis.tui import pick_book, prompt_selection, show
 
 
 def start(win: curses.window):
@@ -22,13 +22,13 @@ def start(win: curses.window):
             win, ["basic", "word", "sentence", "character", "report", "exit"]
         )[1]
         if analysis_kind == "basic":
-            print(analysis.basic(stats))
+            show(win, analysis.basic(stats))
         elif analysis_kind == "word":
-            print(analysis.word_analysis(stats))
+            show(win, analysis.word_analysis(stats))
         elif analysis_kind == "sentence":
-            print(analysis.sentence_analysis(stats))
+            show(win, analysis.sentence_analysis(stats))
         elif analysis_kind == "character":
-            print(analysis.character_analysis(stats))
+            show(win, analysis.character_analysis(stats))
         elif analysis_kind == "report":
             export_report(stats)
         elif analysis_kind == "exit":

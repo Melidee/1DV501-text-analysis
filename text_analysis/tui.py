@@ -1,6 +1,5 @@
 import curses
 from curses import KEY_UP, KEY_DOWN
-from typing import Self
 import os
 from os.path import isdir, isfile
 from text_analysis.book import Book
@@ -42,17 +41,24 @@ def prompt_selection(
         win.addstr(hovering, 0, f"{cursor}{options[hovering]}")
         win.refresh()
         key = win.getch()
-        win.addstr(10, 15, f"key: {key}")
         if key == KEY_UP:
-            win.addstr(10, 0, "keyup")
             win.addstr(hovering, 0, f"{pad}{options[hovering]}")
             hovering = max(hovering - 1, 0)
         elif key == KEY_DOWN:
-            win.addstr(10, 0, "keydown")
             win.addstr(hovering, 0, f"{pad}{options[hovering]}")
             hovering = min(hovering + 1, len(options))
         elif key == KEY_ENTER:
-            win.addstr(10, 0, "enter")
             win.clear()
             win.refresh()
             return hovering, options[hovering]
+
+def show(win: curses.window, text: str) -> None:
+    win.clear()
+    lines = text.splitlines()
+    for i, line in enumerate(text.splitlines()):
+        win.addstr(i, 0, line)
+    win.addstr(len(lines)+1, 0, "Press enter to continue...")
+    win.refresh()
+    _ = win.getch()
+    win.clear()
+    win.refresh()
