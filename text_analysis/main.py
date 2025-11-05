@@ -1,3 +1,4 @@
+import curses
 import sys
 
 import text_analysis.plots as plots
@@ -7,16 +8,18 @@ from text_analysis.stats import Statistics
 from text_analysis.tui import pick_book, prompt_selection
 
 
-def main():
+def start(win: curses.window):
+    win.clear()
+    win.refresh()
     print("Pick a book to analyze")
-    book_path = pick_book()
+    book_path = pick_book(win)
     with Book(book_path) as book:
         stats = Statistics()
         for chunk in book:
             stats.analyze_chunk(chunk)
     while True:
         analysis_kind = prompt_selection(
-            ["basic", "word", "sentence", "character", "report", "exit"]
+            win, ["basic", "word", "sentence", "character", "report", "exit"]
         )[1]
         if analysis_kind == "basic":
             print(analysis.basic(stats))
@@ -31,9 +34,9 @@ def main():
         elif analysis_kind == "exit":
             sys.exit(0)
 
-        next_step = prompt_selection(["new_analysis", "plot", "exit"])[1]
+        next_step = prompt_selection(win, ["new_analysis", "plot", "exit"])[1]
         if next_step == "new_book":
-            main()
+            start(win)
         elif next_step == "new_analysis":
             continue
         elif next_step == "plot":
@@ -46,6 +49,11 @@ def export_report(stats: Statistics) -> None:
     report = analysis.report(stats)
     with open("report.txt", "w") as f:
         _ = f.write(report)
+
+
+def main():
+    curses.wrapper(start)
+
 
 if __name__ == "__main__":
     main()
