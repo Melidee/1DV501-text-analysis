@@ -23,42 +23,60 @@ def pick_book(win: curses.window, dir: str = ".") -> str:
     ]  # strip hidden files
     accessible = dirs + gutenbergs
     shown = [name for name, _ in accessible]
-    i, filename = prompt_selection(win, shown)
+    filename = prompt_selection(win, "Select a book to analyze", shown)
+    i = shown.index(filename)
     if isdir(accessible[i][1]):
         return pick_book(win, os.path.join(dir + accessible[i][1]))
     return filename
 
 
 def prompt_selection(
-    win: curses.window, options: list[str], cursor: str = "➤ "
-) -> tuple[int, str]:
+    win: curses.window, title: str, options: list[str], cursor: str = "   ➤  "
+) -> str:
+    container = title_container(win, title)
     pad = " " * len(cursor)
     for i, option in enumerate(options):
-        win.addstr(i, 0, f"{pad}{option}")
-    win.refresh()
+        container.addstr(i, 0, f"{pad}{option}")
+    container.refresh()
     hovering = 0
     while True:
-        win.addstr(hovering, 0, f"{cursor}{options[hovering]}")
-        win.refresh()
+        container.addstr(hovering, 0, f"{cursor}{options[hovering]}")
+        container.refresh()
         key = win.getch()
         if key == KEY_UP:
-            win.addstr(hovering, 0, f"{pad}{options[hovering]}")
+            container.addstr(hovering, 0, f"{pad}{options[hovering]}")
             hovering = max(hovering - 1, 0)
         elif key == KEY_DOWN:
-            win.addstr(hovering, 0, f"{pad}{options[hovering]}")
-            hovering = min(hovering + 1, len(options))
+            container.addstr(hovering, 0, f"{pad}{options[hovering]}")
+            hovering = min(hovering + 1, len(options)-1)
         elif key == KEY_ENTER:
-            win.clear()
-            win.refresh()
-            return hovering, options[hovering]
+            container.clear()
+            container.refresh()
+            return options[hovering]
 
-def show(win: curses.window, text: str) -> None:
-    win.clear()
-    lines = text.splitlines()
-    for i, line in enumerate(text.splitlines()):
-        win.addstr(i, 0, line)
-    win.addstr(len(lines)+1, 0, "Press enter to continue...")
+def title_container(win: curses.window, title: str, footer: str = "") -> curses.window:
+    height, width = win.getmaxyx()
+    title_win = curses.newwin(3, width)
+    
+    title_loc = (width - len(title)) // 2
+    title_win.addstr(1, title_loc, title)
+    
+    subwin = curses.newwin(height - 4, width-2, 3, 1)
+    title_win.border()
+    win.border()
     win.refresh()
-    _ = win.getch()
+    subwin.refresh()
+    title_win.refresh()
+    return subwin
+
+def show(win: curses.window, title: str, text: str) -> None:
+    win.clear()
+    container = title_container(win, title)
+    height, width = container.getmaxyx()
+    i = 0
+    for i, line in enumerate(text.splitlines()[:height]):
+        container.addnstr(i, 0, line, width)
+    container.refresh()
+    _ = container.getch()
     win.clear()
     win.refresh()

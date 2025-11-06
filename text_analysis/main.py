@@ -11,7 +11,6 @@ from text_analysis.tui import pick_book, prompt_selection, show
 def start(win: curses.window):
     win.clear()
     win.refresh()
-    print("Pick a book to analyze")
     book_path = pick_book(win)
     with Book(book_path) as book:
         stats = Statistics()
@@ -19,22 +18,24 @@ def start(win: curses.window):
             stats.analyze_chunk(chunk)
     while True:
         analysis_kind = prompt_selection(
-            win, ["basic", "word", "sentence", "character", "report", "exit"]
-        )[1]
+            win,
+            "Pick one",
+            ["basic", "word", "sentence", "character", "report", "exit"],
+        )
         if analysis_kind == "basic":
-            show(win, analysis.basic(stats))
+            show(win, "Basic Analysis", analysis.basic(stats))
         elif analysis_kind == "word":
-            show(win, analysis.word_analysis(stats))
+            show(win, "Word Analysis", analysis.word_analysis(stats))
         elif analysis_kind == "sentence":
-            show(win, analysis.sentence_analysis(stats))
+            show(win, "Sentence Analysis", analysis.sentence_analysis(stats))
         elif analysis_kind == "character":
-            show(win, analysis.character_analysis(stats))
+            show(win, "Character Analysis", analysis.character_analysis(stats))
         elif analysis_kind == "report":
             export_report(stats)
         elif analysis_kind == "exit":
             sys.exit(0)
 
-        next_step = prompt_selection(win, ["new_analysis", "plot", "exit"])[1]
+        next_step = prompt_selection(win, "Pick one", ["new_book", "new_analysis", "plot", "exit"])
         if next_step == "new_book":
             start(win)
         elif next_step == "new_analysis":
@@ -47,7 +48,7 @@ def start(win: curses.window):
 
 def export_report(stats: Statistics) -> None:
     report = analysis.report(stats)
-    with open("report.txt", "w") as f:
+    with open("report.json", "w") as f:
         _ = f.write(report)
 
 

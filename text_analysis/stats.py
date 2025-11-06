@@ -9,6 +9,8 @@ class Statistics:
     """
 
     def __init__(self) -> None:
+        # this set should not exist, its the same as the keys of self.words
+        self.words_set: set[str] = set()
         self.words: dict[str, int] = dict()
         self.chars: dict[str, int] = {
             " ": 0,
@@ -45,11 +47,11 @@ class Statistics:
         for ch in line:
             if ch in ascii_letters + "'":
                 word += ch
-            else:
-                if word:
-                    words_in_line += 1
-                    self.add_word(word)
-                    word = ""
+                continue
+            if word:
+                words_in_line += 1
+                self.add_word(word)
+                word = ""
             self.add_char(ch)
         self.last_line = line
 
@@ -61,6 +63,7 @@ class Statistics:
         word = word.casefold()  # same words with different case are considered the same
         current_word_count = get_or_default(self.words, word, 0)
         self.words[word] = current_word_count + 1
+        self.words_set.add(word)
 
     def add_char(self, char: str) -> None:
         char_terminates_sentence = char == "." and self.last_char != char
@@ -93,7 +96,7 @@ class Statistics:
 
     def unique_word_count(self) -> int:
         """Returns the number of unique words found within the text."""
-        return len(self.words.keys())
+        return len(self.words_set)
 
     def most_common_words(self, n: int = 10) -> list[tuple[str, int]]:
         """The most common `n` words found within the text, defaults to 10 words."""
@@ -176,7 +179,7 @@ class Statistics:
         return [(len(word), count) for word, count in self.words.items()]
 
     def most_common_sentence_lengths(self, n: int = 5) -> list[tuple[int, int]]:
-        return sorted(self.sentences.items(), key=lambda e: e[1], reverse=True)[0:n]
+        return sorted(self.sentences.items(), key=lambda e: e[1], reverse=True)[:n]
 
     def longest_sentence(self) -> tuple[str, int]:
         return self._sentence_longest, len(self._sentence_longest.split())

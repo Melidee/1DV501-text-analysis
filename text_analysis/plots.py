@@ -1,15 +1,18 @@
 from string import ascii_letters, punctuation, whitespace
-from tracemalloc import Statistic, StatisticDiff
+
+from matplotlib.axes import Axes
 from text_analysis.stats import Statistics
 import matplotlib.pyplot as plt
 
+
 def show_plot(analysis_kind: str, stats: Statistics) -> None:
-    if analysis_kind == 'basic':
+    if analysis_kind == "basic":
         basic_stats(stats)
-    elif analysis_kind == 'word':
+    elif analysis_kind == "word":
         word_analysis(stats)
-    elif analysis_kind == 'sentence':
+    elif analysis_kind == "sentence":
         sentence_analysis(stats)
+
 
 def basic_stats(stats: Statistics) -> None:
     fig, (ax1, ax2) = plt.subplots(1, 2)
@@ -26,7 +29,7 @@ def text_composition(stats: Statistics, ax) -> None:
         stats.sentence_count(),
         stats.unique_word_count(),
     ]
-    bar_colors = ["tab:red", "tab:blue", "tab:red", "tab:orange"]
+    bar_colors = ["tab:red", "tab:blue", "tab:green", "tab:orange"]
 
     ax.bar(x_labels, counts, color=bar_colors)
 
@@ -63,7 +66,7 @@ def most_common_words(stats: Statistics, ax) -> None:
     ax.bar(x_labels, counts, color=bar_colors)
 
 
-def word_length_distribution(stats: Statistics, ax) -> None:
+def word_length_distribution(stats: Statistics, ax: Axes) -> None:
     most_common = stats.word_lengths()
     x_labels = [word for word, _count in most_common]
     counts = [count for _word, count in most_common]
@@ -82,7 +85,7 @@ def sentence_analysis(stats: Statistics) -> None:
 
 
 def sentence_length_distribution(stats: Statistics, ax) -> None:
-    sentence_lengths = stats.sentence_lengths()
+    sentence_lengths = stats.
     x_labels = [length for length, _count in sentence_lengths]
     counts = [count for _length, count in sentence_lengths]
     bar_colors = ["tab:blue"]
@@ -92,12 +95,10 @@ def sentence_length_distribution(stats: Statistics, ax) -> None:
     ax.bar(x_labels, counts, color=bar_colors)
 
 
-def common_sentence_lengths(stats: Statistics, ax) -> None:
-    sentence_lengths = stats.sentence_lengths()
-    most_common = sorted(sentence_lengths, key=lambda x: x[1])
-    top_10 = most_common[:10]
-    x_labels = [length for length, _count in top_10]
-    counts = [count for _length, count in top_10]
+def common_sentence_lengths(stats: Statistics, ax: Axes) -> None:
+    sentence_lengths = stats.most_common_sentence_lengths(10)
+    x_labels = [length for length, _count in sentence_lengths]
+    counts = [count for _length, count in sentence_lengths]
     bar_colors = ["tab:green"]
 
     ax.set_ylabel("Occurances")
