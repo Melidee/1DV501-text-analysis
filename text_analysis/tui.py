@@ -46,7 +46,7 @@ def prompt_selection[T](
     container = title_container(win, title)
     _height, width = container.getmaxyx()
     
-    views = [standard_view(option).ljust(width) for option in options]
+    views = [standard_view(option).ljust(width-len(cursor)) for option in options]
     hover_views = [hover_view(option) for option in options]
     pad = " " * len(cursor)
     
