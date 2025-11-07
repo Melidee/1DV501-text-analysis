@@ -1,15 +1,13 @@
 import datetime
 from string import ascii_letters, punctuation, whitespace
-import time
-
-from matplotlib import axes
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from text_analysis.book import Book
 from text_analysis.stats import Statistics
 import matplotlib.pyplot as plt
 
 
-def show_plot(analysis_kind: str, stats: Statistics) -> str:
+def show_plot(analysis_kind: str, stats: Statistics, book: Book) -> str:
     if analysis_kind == "Basic Analysis":
         fig = basic_stats(stats)
     elif analysis_kind == "Word Analysis":
@@ -22,6 +20,8 @@ def show_plot(analysis_kind: str, stats: Statistics) -> str:
         raise ValueError("unknown analysis type")
     timestamp = datetime.datetime.now().strftime("%m-%d %H:%M")
     filename = f"plots/{analysis_kind} {timestamp}.png"
+    fig.suptitle(f"{analysis_kind} for {book.title()}")
+    fig.tight_layout()
     fig.savefig(filename)
     return filename
 
@@ -30,8 +30,8 @@ def basic_stats(stats: Statistics) -> Figure:
     fig, (ax1, ax2) = plt.subplots(1, 2)
     text_composition(stats, ax1)
     character_type_dist(stats, ax2)
-    plt.tight_layout()
     return fig
+
 
 def text_composition(stats: Statistics, ax: Axes) -> None:
     x_labels = ["Lines", "Paragraphs", "Sentences", "Unique Words"]
@@ -44,11 +44,12 @@ def text_composition(stats: Statistics, ax: Axes) -> None:
     bar_colors = ["tab:red", "tab:blue", "tab:green", "tab:orange"]
 
     ax.bar(x_labels, counts, color=bar_colors)
-    ax.tick_params(axis='x', labelrotation=45)
+    ax.tick_params(axis="x", labelrotation=45)
     ax.set_xlabel("Words")
     ax.set_ylabel("Occurances")
     ax.set_title("Text composition")
-    
+
+
 def character_type_dist(stats: Statistics, ax: Axes) -> None:
     labels = ("Letters", "Spaces", "Punctuation")
     sizes = [
@@ -71,7 +72,7 @@ def most_common_words(stats: Statistics, ax) -> None:
     most_common = stats.most_common_words()
     x_labels = [word for word, _count in most_common]
     counts = [count for _word, count in most_common]
-    ax.tick_params(axis='x', labelrotation=45)
+    ax.tick_params(axis="x", labelrotation=45)
     ax.set_ylabel("Occurances")
     ax.set_title("Most Common Words")
     ax.bar(x_labels, counts, color="tab:red")
@@ -95,7 +96,7 @@ def sentence_analysis(stats: Statistics) -> Figure:
     return fig
 
 
-def sentence_length_distribution(stats: Statistics, ax:Axes) -> None:
+def sentence_length_distribution(stats: Statistics, ax: Axes) -> None:
     sentence_lengths = stats.sentence_lengths()
     ax.set_xlabel("Sentence length (words)")
     ax.set_ylabel("Occurances")
@@ -111,18 +112,21 @@ def common_sentence_lengths(stats: Statistics, ax: Axes) -> None:
 
     ax.set_ylabel("Occurances")
     ax.set_title("Most common sentence lengths")
+    ax.tick_params(axis="x", labelrotation=45)
     ax.bar(x_labels, counts, color=bar_colors)
+
 
 def character_analysis(stats: Statistics) -> Figure:
     fig, (ax1, ax2) = plt.subplots(1, 2)
     most_common_letters(stats, ax1)
     character_type_dist(stats, ax2)
     return fig
-    
+
+
 def most_common_letters(stats: Statistics, ax: Axes) -> None:
     most_common = stats.most_common_letters()
     x_labels = [letter for letter, _count in most_common]
     counts = [count for _letter, count in most_common]
     ax.set_ylabel("Occurances")
-    ax.set_title("Most Common Characters")
+    ax.set_title("Most Common Letters")
     ax.bar(x_labels, counts, color="tab:purple")

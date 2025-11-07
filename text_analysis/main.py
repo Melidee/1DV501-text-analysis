@@ -47,7 +47,8 @@ def book_analysis(win: curses.window):
         elif analysis_kind == "Character Analysis":
             show(win, "Character Analysis", character_analysis(stats))
         elif analysis_kind == "Export JSON Report":
-            export_report(stats)
+            filename = export_report(stats)
+            show(win, "Report info", f"Plot exported to: {filename}")
         elif analysis_kind == "Exit the program":
             sys.exit(0)
 
@@ -66,18 +67,20 @@ def book_analysis(win: curses.window):
         elif next_step == f"Perform a new analysis on {book_path}":
             continue
         elif next_step == f"Export plot for {analysis_kind}":
-            filename = plots.show_plot(analysis_kind, stats)
+            filename = plots.show_plot(analysis_kind, stats, book)
             show(win, "Plot info", f"Plot exported to: {filename}")
         elif next_step == "Exit the program":
             sys.exit(0)
 
 
-def export_report(stats: Statistics) -> None:
+def export_report(stats: Statistics) -> str:
     report = stats.report()
     report_output = json.dumps(report, indent=2)
     timestamp = datetime.now().strftime("%m-%d_%H:%M")
-    with open(f"reports/report_{timestamp}.json", "w") as f:
+    file_name = f"reports/report_{timestamp}.json"
+    with open(file_name, "w") as f:
         _ = f.write(report_output)
+    return file_name
 
 
 def main():

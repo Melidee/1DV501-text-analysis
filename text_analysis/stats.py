@@ -1,5 +1,5 @@
 import random
-from string import ascii_letters, whitespace
+from string import ascii_letters, digits, punctuation, whitespace
 from typing import Any
 
 
@@ -199,6 +199,7 @@ class Statistics:
         return total
 
     def report(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
+        """Return a dict that summarizes the statistics of the book, can be used to serialize results"""
         report = {
             "basic_statistics": {
                 "lines": self.line_count(),
@@ -224,6 +225,23 @@ class Statistics:
                     "average_length": self.average_word_length(),
                     "words_only_once": self.words_only_once(),
                 },
+            },
+            "sentence_analysis": {
+                "total_count": self.sentence_count(),
+                "shortest": self.shortest_sentence()[0],
+                "shortest_length": self.shortest_sentence()[1],
+                "longest": self.longest_sentence()[0],
+                "longest_length": self.longest_sentence()[1],
+            },
+            "character_analysis": {
+                "letters": self.char_kind_count(ascii_letters),
+                "digits": self.char_kind_count(digits),
+                "whitespace": self.char_kind_count(whitespace),
+                "punctuation": self.char_kind_count(punctuation),
+                "most_common": [
+                    {"letter": letter, "count": count}
+                    for letter, count in self.most_common_letters()
+                ],
             },
         }
         return report

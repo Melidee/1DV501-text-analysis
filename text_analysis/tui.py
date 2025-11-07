@@ -1,9 +1,9 @@
 import curses
 import os
-from curses import KEY_UP, KEY_DOWN
+from curses import A_BOLD, KEY_UP, KEY_DOWN
 from os.path import isfile
 from typing import Callable
-from text_analysis.book import Book, is_gutenburg
+from text_analysis.book import Book
 from string import ascii_letters, digits, punctuation, whitespace
 from text_analysis.stats import Statistics
 
@@ -12,25 +12,16 @@ KEY_ENTER = ord("\n")
 
 
 def pick_book(win: curses.window, dir: str = "./books") -> str:
+    """Prompts the user to pick a book file from `dir`, returns the path to the chosen file"""
     file_names = [os.path.join(dir, name) for name in os.listdir(dir)]
     books = [Book(filename) for filename in file_names if isfile(filename)]
-
-    def standard_view(book: Book) -> str:
-        if book.gutenburg.title:
-            return book.gutenburg.title
-        return book.book_path
-
-    def hover_view(book: Book) -> str:
-        if book.gutenburg.title:
-            return f"{book.gutenburg.title} by {book.gutenburg.author} {book.size()} ({book.book_path})"
-        return f"{book.book_path} {book.size}"
 
     book = prompt_selection(
         win,
         "Select a book to analyze",
         books,
-        standard_view=standard_view,
-        hover_view=hover_view,
+        standard_view=Book.title,
+        hover_view=Book.details,
     )
     return book.book_path
 
@@ -43,20 +34,22 @@ def prompt_selection[T](
     standard_view: Callable[[T], str] = lambda e: str(e),
     hover_view: Callable[[T], str] = lambda e: str(e),
 ) -> T:
+    """Prompt the user to pick from a set of options using their terminal arrow keys"""
     container = title_container(win, title)
-    _height, width = container.getmaxyx()
-    
-    views = [standard_view(option).ljust(width-len(cursor)) for option in options]
+    height, width = container.getmaxyx()
+    container.addstr(height-1, 0, "Use arrow keys to move up and down, press Enter to select")
+
+    views = [standard_view(option).ljust(width - len(cursor)) for option in options]
     hover_views = [hover_view(option) for option in options]
     pad = " " * len(cursor)
-    
+
     for i, view in enumerate(views):
         container.addstr(i, 0, f"{pad}{view}")
     container.refresh()
-    
+
     hovering = 0
     while True:
-        container.addstr(hovering, 0, f"{cursor}{hover_views[hovering]}")
+        container.addstr(hovering, 0, f"{cursor}{hover_views[hovering]}", A_BOLD)
         container.refresh()
         key = win.getch()
         if key == KEY_UP:
@@ -107,7 +100,7 @@ def show(win: curses.window, title: str, text: str) -> None:
     """Shows a body of text in the terminal with a title"""
     win.clear()
     container = title_container(win, title)
-    height, width = container.getmaxyx()
+    height, _width = container.getmaxyx()
     i = 0
     for i, line in enumerate(text.splitlines()[:height]):
         _ = wrap_addstr(container, i, 0, line)
