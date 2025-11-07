@@ -69,6 +69,23 @@ def title_container(win: curses.window, title: str, footer: str = "") -> curses.
     title_win.refresh()
     return subwin
 
+
+def wrap_addstr(win: curses.window, y: int, x: int, text: str) -> int:
+    """addstr to y, x, bu"""
+    height, width = win.getmaxyx()
+    end_of_line = width - x
+    first_chunk, text = text[:end_of_line], text[end_of_line:]
+    win.addstr(y, x, first_chunk)
+    offset = 1
+    while text:
+        chunk, text = text[:width], text[width:]
+        line_y = y + offset
+        if line_y > height:
+            break
+        win.addstr(line_y, x, chunk)
+    return offset + 1
+
+
 def show(win: curses.window, title: str, text: str) -> None:
     win.clear()
     container = title_container(win, title)

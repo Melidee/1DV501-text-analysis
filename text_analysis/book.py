@@ -39,17 +39,20 @@ class Book:
         self.book_path: str = book_path
         self.book: TextIOWrapper = open(book_path, "r")
         self.file_size: int = os.path.getsize(book_path)
-        self.gutenburg: GutenbergHeader | None = self.gutenberg_header()
+        self.gutenburg: GutenbergHeader = self._get_gutenberg_header()
 
     def is_gutenburg(self) -> bool:
-        with open(self.book_path, "r") as f:
-            return f.read(32) == "﻿The Project Gutenberg eBook of "
+        try:
+            with open(self.book_path, "r") as f:
+                return f.read(32) == "﻿The Project Gutenberg eBook of "
+        except UnicodeDecodeError:
+            return False
 
-    def gutenberg_header(self) -> GutenbergHeader | None:
+    def _get_gutenberg_header(self) -> GutenbergHeader:
         if self.is_gutenburg():
             return GutenbergHeader(self.book)
         else:
-            return None
+            raise ValueError("not gutenburg")
 
     def size(self) -> str:
         """Size of the book file formatted to be pretty, such as 5.1MB or 3.0KB"""

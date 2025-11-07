@@ -1,5 +1,6 @@
 import random
 from string import ascii_letters, whitespace
+from typing import Any
 
 
 class Statistics:
@@ -9,7 +10,7 @@ class Statistics:
     """
 
     def __init__(self) -> None:
-        # this set should not exist, its the same as the keys of self.words
+        # this set is redundant, its the same as the keys of self.words
         self.words_set: set[str] = set()
         self.words: dict[str, int] = dict()
         self.chars: dict[str, int] = {
@@ -30,9 +31,9 @@ class Statistics:
     def analyze_chunk(self, lines: list[str]) -> None:
         for line in lines:
             line += "\n"  # preserve newline for character counting
-            self.analyze_line(line)
+            self._analyze_line(line)
 
-    def analyze_line(self, line: str) -> None:
+    def _analyze_line(self, line: str) -> None:
         words_in_line = len(line.split())
         current_line_len_count = get_or_default(self.lines, words_in_line, 0)
         self.lines[words_in_line] = current_line_len_count + 1
@@ -47,15 +48,15 @@ class Statistics:
         for ch in line:
             if ch in ascii_letters + "'":
                 word += ch
-                continue
-            if word:
-                words_in_line += 1
-                self.add_word(word)
-                word = ""
-            self.add_char(ch)
+            else:
+                if word:
+                    words_in_line += 1
+                    self._add_word(word)
+                    word = ""
+            self._add_char(ch)
         self.last_line = line
 
-    def add_word(self, word: str) -> None:
+    def _add_word(self, word: str) -> None:
         """
         Adds a word to the statistics.
         Words are casefolded and apostrophes are included to ensure consistency
@@ -65,7 +66,7 @@ class Statistics:
         self.words[word] = current_word_count + 1
         self.words_set.add(word)
 
-    def add_char(self, char: str) -> None:
+    def _add_char(self, char: str) -> None:
         char_terminates_sentence = char == "." and self.last_char != char
         if char_terminates_sentence:
             self.add_sentence()
@@ -75,6 +76,7 @@ class Statistics:
         current_char_count = get_or_default(self.chars, char, 0)
         self.chars[char] = current_char_count + 1
 
+    # --- Line and paragraph methods --- #
     def add_sentence(self) -> None:
         # remove newlines so we can pretty print
         sentence = self.sentence_buf.replace("\n", " ")
@@ -94,6 +96,24 @@ class Statistics:
         current_sentence_count = get_or_default(self.sentences, word_count, 0)
         self.sentences[word_count] = current_sentence_count + 1
 
+    def line_count(self) -> int:
+        return self.chars["\n"]
+
+    def paragraph_count(self) -> int:
+        return self.paragraphs
+
+    def sentence_count(self) -> int:
+        """Number of sentences within the text, a sentence is a string of words terminating in a `.`"""
+        return sum(self.sentences.values())
+
+    def average_words_per_line(self) -> float:
+        total = 0
+        for line_len, count in self.lines.items():
+            total += line_len * count
+        avg = total / sum(self.lines.values())
+        return round(avg, 2)
+
+    # --- Word methods --- #
     def unique_word_count(self) -> int:
         """Returns the number of unique words found within the text."""
         return len(self.words_set)
@@ -106,58 +126,11 @@ class Statistics:
         top_n_books = ordered_by_occurances[0:n]
         return top_n_books
 
-    def most_common_letters(self, n: int = 10) -> list[tuple[str, int]]:
-        ordered_by_occurances = sorted(
-            self.chars.items(), key=lambda e: e[1], reverse=True
-        )
-        letters = [
-            (ch, count) for ch, count in ordered_by_occurances if ch in ascii_letters
-        ]
-        return letters[0:n]
-
-    def line_count(self) -> int:
-        return self.chars["\n"]
-
-    def paragraph_count(self) -> int:
-        return self.paragraphs
-
-    def sentence_count(self) -> int:
-        """Number of sentences within the text, a sentence is a string of words terminating in a `.`"""
-        return sum(self.sentences.values())
-
-    def character_count(self, exclude_whitespace: bool = False) -> int:
-        """Number of total characters in the book."""
-        if exclude_whitespace:
-            whitespace_count = self.char_kind_count(whitespace)
-            return sum(self.chars.values()) - whitespace_count
-        else:
-            return sum(self.chars.values())
-
-    def char_kind_count(self, kind: str) -> int:
-        total = 0
-        for letter in kind:
-            total += get_or_default(self.chars, letter, 0)
-        return total
-
-    def average_words_per_line(self) -> float:
-        total = 0
-        for line_len, count in self.lines.items():
-            total += line_len * count
-        avg = total / sum(self.lines.values())
-        return round(avg, 2)
-
     def average_word_length(self) -> float:
         total = 0
         for word, count in self.words.items():
             total += len(word) * count
         avg = total / self.total_word_count()
-        return round(avg, 2)
-
-    def average_words_per_sentence(self) -> float:
-        total = 0
-        for sentence_len, count in self.sentences.items():
-            total += sentence_len * count
-        avg = total / self.sentence_count()
         return round(avg, 2)
 
     def total_word_count(self) -> int:
@@ -178,14 +151,82 @@ class Statistics:
     def word_lengths(self) -> list[tuple[int, int]]:
         return [(len(word), count) for word, count in self.words.items()]
 
+    # --- Sentence methods --- #
+    def average_words_per_sentence(self) -> float:
+        total = 0
+        for sentence_len, count in self.sentences.items():
+            total += sentence_len * count
+        avg = total / self.sentence_count()
+        return round(avg, 2)
+
     def most_common_sentence_lengths(self, n: int = 5) -> list[tuple[int, int]]:
         return sorted(self.sentences.items(), key=lambda e: e[1], reverse=True)[:n]
 
+    def sentence_lengths(self) -> list[int]:
+        lengths: list[int] = []
+        for i in range(100):
+            lengths.append(get_or_default(self.sentences, i, 0))
+        return lengths
+
     def longest_sentence(self) -> tuple[str, int]:
-        return self._sentence_longest, len(self._sentence_longest.split())
+        return self._sentence_longest.strip(), len(self._sentence_longest.split())
 
     def shortest_sentence(self) -> tuple[str, int]:
-        return self._sentence_shortest, len(self._sentence_shortest.split())
+        return self._sentence_shortest.strip(), len(self._sentence_shortest.split())
+
+    # --- Character methods --- #
+    def most_common_letters(self, n: int = 10) -> list[tuple[str, int]]:
+        ordered_by_occurances = sorted(
+            self.chars.items(), key=lambda e: e[1], reverse=True
+        )
+        letters = [
+            (ch, count) for ch, count in ordered_by_occurances if ch in ascii_letters
+        ]
+        return letters[0:n]
+
+    def character_count(self, exclude_whitespace: bool = False) -> int:
+        """Number of total characters in the book."""
+        if exclude_whitespace:
+            whitespace_count = self.char_kind_count(whitespace)
+            return sum(self.chars.values()) - whitespace_count
+        else:
+            return sum(self.chars.values())
+
+    def char_kind_count(self, kind: str) -> int:
+        total = 0
+        for letter in kind:
+            total += get_or_default(self.chars, letter, 0)
+        return total
+
+    def report(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
+        report = {
+            "basic_statistics": {
+                "lines": self.line_count(),
+                "paragraphs": self.paragraph_count(),
+                "sentences": self.sentence_count(),
+                "words": self.total_word_count(),
+                "unique_words": self.unique_word_count(),
+                "characters": self.character_count(),
+                "characters_without_whitespace": self.character_count(
+                    exclude_whitespace=True
+                ),
+                "average_words_per_line": self.average_words_per_line(),
+                "average_word_length": self.average_word_length(),
+            },
+            "word_analysis": {
+                "most_common": [
+                    {"word": word, "count": count}
+                    for word, count in self.most_common_words()
+                ],
+                "word_length_stats": {
+                    "shortest": self.shortest_word(),
+                    "longest": self.longest_word(),
+                    "average_length": self.average_word_length(),
+                    "words_only_once": self.words_only_once(),
+                },
+            },
+        }
+        return report
 
 
 def get_or_default[K, V](d: dict[K, V], key: K, default: V) -> V:

@@ -92,6 +92,9 @@ def sentence_length_distribution(stats: Statistics, ax) -> None:
 
     ax.set_ylabel("Occurances")
     ax.set_title("Sentence length distribution")
+    for i, label in enumerate(ax.xaxis.get_ticklabels()):
+        if i % 10 != 0:
+        label.set_visible(False)
     ax.bar(x_labels, counts, color=bar_colors)
 
 

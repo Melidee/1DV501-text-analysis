@@ -1,14 +1,23 @@
 import curses
 import sys
+import json
+from datetime import datetime
 
 import text_analysis.plots as plots
-from text_analysis import analysis
 from text_analysis.book import Book
 from text_analysis.stats import Statistics
-from text_analysis.tui import pick_book, prompt_selection, show
+from text_analysis.tui import (
+    basic,
+    pick_book,
+    prompt_selection,
+    show,
+    word_analysis,
+    sentence_analysis,
+    character_analysis,
+)
 
 
-def start(win: curses.window):
+def book_analysis(win: curses.window):
     win.clear()
     win.refresh()
     book_path = pick_book(win)
@@ -19,41 +28,60 @@ def start(win: curses.window):
     while True:
         analysis_kind = prompt_selection(
             win,
-            "Pick one",
-            ["basic", "word", "sentence", "character", "report", "exit"],
+            "What kind of analysis would you like?",
+            [
+                "Basic Analysis",
+                "Word Analysis",
+                "Sentence Analysis",
+                "Character Analysis",
+                "Export JSON Report",
+                "Exit the program",
+            ],
         )
-        if analysis_kind == "basic":
-            show(win, "Basic Analysis", analysis.basic(stats))
-        elif analysis_kind == "word":
-            show(win, "Word Analysis", analysis.word_analysis(stats))
-        elif analysis_kind == "sentence":
-            show(win, "Sentence Analysis", analysis.sentence_analysis(stats))
-        elif analysis_kind == "character":
-            show(win, "Character Analysis", analysis.character_analysis(stats))
-        elif analysis_kind == "report":
+        if analysis_kind == "Basic Analysis":
+            show(win, "Basic Analysis", basic(stats))
+        elif analysis_kind == "Word Analysis":
+            show(win, "Word Analysis", word_analysis(stats))
+        elif analysis_kind == "Sentence Analysis":
+            show(win, "Sentence Analysis", sentence_analysis(stats))
+        elif analysis_kind == "Character Analysis":
+            show(win, "Character Analysis", character_analysis(stats))
+        elif analysis_kind == "Export JSON Report":
             export_report(stats)
-        elif analysis_kind == "exit":
+        elif analysis_kind == "Exit the program":
             sys.exit(0)
 
-        next_step = prompt_selection(win, "Pick one", ["new_book", "new_analysis", "plot", "exit"])
-        if next_step == "new_book":
-            start(win)
-        elif next_step == "new_analysis":
+        next_step = prompt_selection(
+            win,
+            "",
+            [
+                "Pick a new book",
+                f"Perform a new analysis on {book_path}",
+                f"Export plot for {analysis_kind}",
+                "Exit the program",
+            ],
+        )
+        if next_step == "Pick a new book":
+            book_analysis(win)
+        elif next_step == f"Perform a new analysis on {book_path}":
             continue
-        elif next_step == "plot":
-            plots.show_plot(analysis_kind, stats)
-        elif next_step == "exit":
+        elif next_step == f"Export plot for {analysis_kind}":
+            filename = plots.show_plot(analysis_kind, stats)
+            show(win, "Plot info", f"Plot exported to: {filename}")
+        elif next_step == "Exit the program":
             sys.exit(0)
 
 
 def export_report(stats: Statistics) -> None:
-    report = analysis.report(stats)
-    with open("report.json", "w") as f:
-        _ = f.write(report)
+    report = stats.report()
+    report_output = json.dumps(report, indent=2)
+    timestamp = datetime.now().strftime("%m-%d_%H:%M")
+    with open(f"reports/report_{timestamp}.json", "w") as f:
+        _ = f.write(report_output)
 
 
 def main():
-    curses.wrapper(start)
+    curses.wrapper(book_analysis)
 
 
 if __name__ == "__main__":
