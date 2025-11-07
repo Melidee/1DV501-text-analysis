@@ -1,17 +1,29 @@
 from io import TextIOWrapper
 import os
-from typing import Self
+from typing import Self, overload
 
+def is_gutenburg(file_path: str) -> bool:
+    try:
+        with open(file_path, "r") as f:
+            return f.read(32) == "﻿The Project Gutenberg eBook of "
+    except UnicodeDecodeError:
+        return False
 
 class GutenbergHeader:
+    GUTENBURG_START_CHAR: str = '﻿'
+    
     def __init__(self, file: TextIOWrapper) -> None:
-        title, author, release_date, language, credits = self.read_file(file)
+        if file.read(1) != self.GUTENBURG_START_CHAR:
+            title, author, release_date, language, credits = "", "", "", "", ""
+        else:
+            title, author, release_date, language, credits = self.read_file(file)
         self.title: str = title
         self.author: str = author
         self.release_date: str = release_date
         self.language: str = language
         self.credits: str = credits
-
+        
+        
     def read_file(self, file: TextIOWrapper) -> tuple[str, str, str, str, str]:
         lines: list[str] = []
         while (line := file.readline())[
@@ -19,12 +31,12 @@ class GutenbergHeader:
         ] != "*** START OF THE PROJECT GUTENBERG EBOOK":
             lines.append(line)
 
-        # hardcoded values for where certain metadata is, i.e title is always on line 11
-        title = lines[11][7:]
-        author = lines[13][9:]
-        release_date = lines[15][14:]
-        language = lines[18][10:]
-        credits = lines[20][9:]
+        # hardcoded values for where certain metadata is, i.e title is always on line 10
+        title = lines[10][7:-1]
+        author = lines[12][8:-1]
+        release_date = lines[14][14:-1]
+        language = lines[17][10:-1]
+        credits = lines[19][9:-1]
         return title, author, release_date, language, credits
 
 
@@ -39,20 +51,7 @@ class Book:
         self.book_path: str = book_path
         self.book: TextIOWrapper = open(book_path, "r")
         self.file_size: int = os.path.getsize(book_path)
-        self.gutenburg: GutenbergHeader = self._get_gutenberg_header()
-
-    def is_gutenburg(self) -> bool:
-        try:
-            with open(self.book_path, "r") as f:
-                return f.read(32) == "﻿The Project Gutenberg eBook of "
-        except UnicodeDecodeError:
-            return False
-
-    def _get_gutenberg_header(self) -> GutenbergHeader:
-        if self.is_gutenburg():
-            return GutenbergHeader(self.book)
-        else:
-            raise ValueError("not gutenburg")
+        self.gutenburg: GutenbergHeader = GutenbergHeader(self.book)
 
     def size(self) -> str:
         """Size of the book file formatted to be pretty, such as 5.1MB or 3.0KB"""
