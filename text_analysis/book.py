@@ -1,6 +1,6 @@
 from io import TextIOWrapper
 import os
-from typing import Self, overload
+from typing import Self
 
 
 def is_gutenburg(file_path: str) -> bool:

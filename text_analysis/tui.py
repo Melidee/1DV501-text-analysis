@@ -37,7 +37,9 @@ def prompt_selection[T](
     """Prompt the user to pick from a set of options using their terminal arrow keys"""
     container = title_container(win, title)
     height, width = container.getmaxyx()
-    container.addstr(height-1, 0, "Use arrow keys to move up and down, press Enter to select")
+    container.addstr(
+        height - 1, 0, "Use arrow keys to move up and down, press Enter to select"
+    )
 
     views = [standard_view(option).ljust(width - len(cursor)) for option in options]
     hover_views = [hover_view(option) for option in options]
@@ -65,6 +67,7 @@ def prompt_selection[T](
 
 
 def title_container(win: curses.window, title: str) -> curses.window:
+    """turns a window into a titled window, showing a border and a title bar, and returning a handle to the enclosed container"""
     height, width = win.getmaxyx()
     title_win = curses.newwin(3, width)
 

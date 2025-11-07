@@ -1,4 +1,5 @@
 import curses
+import os
 import sys
 import json
 from datetime import datetime
@@ -18,8 +19,7 @@ from text_analysis.tui import (
 
 
 def book_analysis(win: curses.window):
-    win.clear()
-    win.refresh()
+    win_setup(win)
     book_path = pick_book(win)
     with Book(book_path) as book:
         stats = Statistics()
@@ -54,7 +54,7 @@ def book_analysis(win: curses.window):
 
         next_step = prompt_selection(
             win,
-            "",
+            f"What to do next with {book.title()}",
             [
                 "Pick a new book",
                 f"Perform a new analysis on {book_path}",
@@ -73,11 +73,19 @@ def book_analysis(win: curses.window):
             sys.exit(0)
 
 
+def win_setup(win: curses.window):
+    win.clear()
+    win.refresh()
+
+
 def export_report(stats: Statistics) -> str:
     report = stats.report()
     report_output = json.dumps(report, indent=2)
+    # get current timestamp
     timestamp = datetime.now().strftime("%m-%d_%H:%M")
     file_name = f"reports/report_{timestamp}.json"
+    # create report dir if it doesn't exist
+    os.makedirs(os.path.dirname("./reports/"), exist_ok=True)
     with open(file_name, "w") as f:
         _ = f.write(report_output)
     return file_name
