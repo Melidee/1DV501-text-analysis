@@ -1,5 +1,8 @@
 # Project Gutenberg books
 *.txt.utf-8
+# project output
+plots/
+reports
 
 # Python-generated files
 __pycache__/
