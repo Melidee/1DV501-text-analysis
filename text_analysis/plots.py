@@ -1,4 +1,5 @@
 import datetime
+import os
 from string import ascii_letters, punctuation, whitespace
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -22,6 +23,7 @@ def show_plot(analysis_kind: str, stats: Statistics, book: Book) -> str:
     filename = f"plots/{analysis_kind} {timestamp}.png"
     fig.suptitle(f"{analysis_kind} for {book.title()}")
     fig.tight_layout()
+    os.makedirs(os.path.dirname("./plots/"), exist_ok=True)
     fig.savefig(filename)
     return filename
 
